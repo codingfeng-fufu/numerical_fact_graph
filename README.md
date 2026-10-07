@@ -1,24 +1,60 @@
 # Numerical Fact Graphs for Auditable Financial Question Answering
 
-Anonymous reproducibility package for the COLING/ARR submission:
+Anonymous code package for the COLING/ARR paper:
 
 > **Numerical Fact Graphs for Auditable Financial Question Answering: Evidence-Bounded Calculation and Failure Localization**
 
-This repository contains the deterministic core used to represent numerical facts, build typed calculation plans, validate operands, execute supported operators, and inspect selected failure conditions in financial numerical question answering.
+## Purpose
 
-## What is included
+The paper represents financial numbers as typed facts with structural context and evidence-oriented identifiers. A question selects facts from this representation, connects them to a typed calculation plan, checks the plan, and executes supported operators deterministically.
 
-- `src/graph_numeric/`: numerical fact graph structures, typed plans, operators, validation, deterministic execution and replay helpers;
-- `tests/`: deterministic tests for graph construction, operator solving, plan validation, verifier behavior, strict anchors and abstention audits;
-- `scripts/smoke_query.py`: a small end-to-end query over synthetic facts;
-- `scripts/build_replay_conformance.py`: the aggregate replay report builder used by the development audit;
-- `docs/reproducibility_scope.md`: the boundary between this package and the private evaluation artifacts.
+This repository contains the reusable deterministic code for that contract. It is intended to let reviewers inspect and test the numerical fact graph, typed plans, operators, validation rules and replay utilities without access to private evaluation artifacts.
 
-The package is a code and deterministic-test release. It does not contain the sealed evaluation set, item-level outputs, model checkpoints, prompt caches or private audit records.
+The package corresponds to the following parts of the paper:
 
-## Installation
+| Paper concept | Code area |
+|---|---|
+| Numerical facts and fact graph projection | `src/graph_numeric/core/` |
+| Typed calculation plans and operators | `src/graph_numeric/operators/` and `src/graph_numeric/pipeline/` |
+| Evidence-oriented identifiers and binding | `src/graph_numeric/binding/` and `src/graph_numeric/learning/` |
+| Deterministic execution and output normalization | `src/graph_numeric/operators/` and `src/graph_numeric/runtime/` |
+| Validation and audit utilities | `src/graph_numeric/audit/` |
+| Deterministic tests | `tests/` |
 
-Python 3.11 or newer is required.
+## What can be run from this repository
+
+The package provides:
+
+- construction and querying of synthetic numerical fact graphs;
+- typed operator plans for aggregation, ratios, differences and related calculations;
+- deterministic plan validation and refusal checks;
+- evidence-oriented token and anchor utilities;
+- canonical derivation and replay helpers;
+- unit tests that do not call an LLM or require network access.
+
+The smoke test and deterministic test suite run on hand-constructed or synthetic facts. They verify the calculation and validation core.
+
+## What is not included
+
+The paper's aggregate FinQA, TAT-QA and annual-report results were produced in a separate controlled evaluation workspace. This anonymous package does not include:
+
+- sealed evaluation data or identifiers;
+- item-level predictions and private audit labels;
+- prompt or extraction caches;
+- model checkpoints or external API outputs;
+- author information, credentials or workspace-specific paths.
+
+The replay report builder is included for code inspection, but its frozen item-level inputs are not included. The paper reports that the revised serializer reproduces 91/91 accepted development outputs while noting that the serializer can select a matching plan after observing the answer.
+
+## Requirements
+
+- Python 3.11 or newer;
+- no network connection for the smoke test or deterministic tests;
+- approximately 1 GB of free disk space for a normal Python environment and test run.
+
+## Install
+
+From the repository root:
 
 ```bash
 python -m venv .venv
@@ -26,9 +62,7 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 ```
 
-The deterministic tests do not call an LLM or require network access.
-
-## Smoke test
+## Run the smoke test
 
 ```bash
 PYTHONPATH=src python scripts/smoke_query.py
@@ -40,9 +74,13 @@ Expected output:
 ok answer=2150.0 operator=SUM
 ```
 
-The smoke test creates three synthetic company facts, selects the two `TECH` facts for 2024, and evaluates their revenue sum.
+The script creates three synthetic company facts, selects the two `TECH` facts from 2024, and computes their revenue sum:
 
-## Deterministic tests
+```text
+1200 + 950 = 2150
+```
+
+## Run the deterministic tests
 
 ```bash
 PYTHONPATH=src pytest -q \
@@ -55,14 +93,12 @@ PYTHONPATH=src pytest -q \
   tests/test_s4prime_abstention_audit.py
 ```
 
-The prepared environment passes 182 tests. The tests use hand-constructed or synthetic facts and are independent of the paper's sealed evaluation data.
+The prepared environment passes 182 tests. These tests cover graph construction, operator solving, typed plans, validation, verifier behavior, strict anchors and abstention audits.
 
 ## Replay audit utility
 
-`python scripts/build_replay_conformance.py` builds the aggregate replay report when an evaluator supplies the corresponding frozen item-level inputs. Those inputs are intentionally absent from this repository. The paper reports the two serializer versions separately and describes the answer-conditioned limitation of the revised serializer.
+`scripts/build_replay_conformance.py` builds the aggregate replay report when an evaluator supplies the corresponding frozen item-level input files. It is included for inspection and controlled reproduction; those inputs are intentionally excluded from this anonymous release.
 
-## Reproducibility and anonymity
+## Anonymous review boundary
 
-The paper reports aggregate FinQA, TAT-QA and annual-report results. This package provides the deterministic components needed to inspect the fact graph and calculation contract; private evaluation artifacts remain separate. The repository contains no author names, email addresses, remote URLs, credentials, model caches or workspace-specific paths. Please preserve this boundary when creating an anonymous mirror for review.
-
-See `MANIFEST.json` for the package scope, test results and file hashes.
+This repository is prepared for double-blind review. It contains no author names, email addresses, remote repository URLs, credentials, model caches or private evidence. Please preserve the repository contents and history when creating an anonymous mirror. `MANIFEST.json` records the package scope, test results and file hashes.
